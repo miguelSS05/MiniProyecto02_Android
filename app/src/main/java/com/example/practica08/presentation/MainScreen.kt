@@ -184,25 +184,33 @@ fun MainScreen() {
                                 val ColorEstatus = if (tarea.Estatus) Color(0xFF7DD363) else Color(
                                     0xFFCCA48E
                                 )
-                                val TextoEstatus = if (tarea.Estatus) "Tarea terminada" else "Tarea pendiente"
+                                val TextoEstatus = if (tarea.Estatus) "Tarea marcada como pendiente" else "Tarea marcada como culminada"
                                 val IconEstatus = if (tarea.Estatus) Icons.Default.Check else Icons.Default.AccessTime
 
-                                IconButton(onClick = {
-                                    Toast.makeText(context, TextoEstatus, Toast.LENGTH_SHORT).show()
-                                },
+                                IconButton(
+                                    onClick = {
+                                        coroutineScope.launch(Dispatchers.IO) {dao.actualizar(tarea.copy(Estatus = !tarea.Estatus)) }
+                                        Toast.makeText(context, TextoEstatus, Toast.LENGTH_SHORT).show()
+                                    },
                                     modifier = Modifier
                                         .clip(CircleShape)
                                         .height(42.dp)
-                                        .background(ColorEstatus)) {
-                                    Icon(IconEstatus, "")
+                                        .background(ColorEstatus)
+                                ) {
+                                    Icon(imageVector = IconEstatus, contentDescription = "")
                                 }
 
                                 Spacer(modifier = Modifier.width(4.dp))
 
                                 IconButton(onClick = {
-                                    coroutineScope.launch(Dispatchers.IO) {
-                                        dao.eliminar(tarea)
+                                    val intent = Intent(context, AddTaskActivity::class.java).apply {
+                                        putExtra(
+                                            "ID_TAREA",
+                                            tarea.id
+                                        )
                                     }
+                                    context.startActivity(intent)
+
                                     Toast.makeText(context, "Editar tarea", Toast.LENGTH_SHORT).show()
                                 },
                                     modifier = Modifier

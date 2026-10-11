@@ -33,9 +33,8 @@ fun convertCategory(c: categoria): String {
 val listCategories: List<categoria> = listOf(categoria.Otro, categoria.Hogar, categoria.Escolar, categoria.Social, categoria.Trabajo)
 
 @Composable
-fun CustomSpinner(onCategoryChange: (categoria) -> Unit) {
+fun CustomSpinner(selectedCategory: categoria, onCategoryChange: (categoria) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedCategory by remember { mutableStateOf(categoria.Otro) }
 
     Box(modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
@@ -59,7 +58,6 @@ fun CustomSpinner(onCategoryChange: (categoria) -> Unit) {
                 DropdownMenuItem(
                     text = { Text(convertCategory(c))},
                     onClick = {
-                        selectedCategory = c
                         onCategoryChange(c)
                         expanded = false
                     }

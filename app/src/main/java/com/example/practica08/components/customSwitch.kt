@@ -16,17 +16,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun CustomSwitch(onCompleteChanged: (Boolean) -> Unit) {
-    var isChecked by remember { mutableStateOf(false)}
+fun CustomSwitch(checked: Boolean, onCompleteChanged: (Boolean) -> Unit) {
 
     Column(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Text("Tarea terminada", style = MaterialTheme.typography.titleMedium)
         Switch(
-            checked = isChecked,
+            checked = checked,
             onCheckedChange = {
-                isChecked = it
                 onCompleteChanged(it)
             }
         )

@@ -51,7 +51,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.practica08.data.categoria
 import kotlin.jvm.java
-
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.Color
 
 fun convertCategory(c: categoria): String {
     return when (c) {
@@ -71,7 +72,7 @@ val listCategories: List<categoria> = listOf(categoria.Otro, categoria.Hogar, ca
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskScreen(onBackClick: () -> Unit) {
+fun AddTaskScreen(onBackClick: () -> Unit, tareaId: Int = -1) {
     val context = LocalContext.current
 
     val db = remember { AppDatabase.getDatabase(context) }
@@ -85,7 +86,22 @@ fun AddTaskScreen(onBackClick: () -> Unit) {
     var nuevaFecha by remember { mutableStateOf("") }
     var nuevaCategoria by remember { mutableStateOf(categoria.Otro) }
     var nuevoEstatus by remember { mutableStateOf(false) }
+    LaunchedEffect(tareaId) {
 
+        if (tareaId != -1) {
+
+            val tarea = dao.obtenerPorId(tareaId)
+
+            tarea?.let {
+
+                nuevoNombre = it.Nombre
+                nuevaFecha = it.Fecha
+                nuevaCategoria = it.Categoria
+                nuevoEstatus = it.Estatus
+
+            }
+        }
+    }
     var menuExpandido by remember { mutableStateOf(false)}
 
     Scaffold(
@@ -151,17 +167,24 @@ fun AddTaskScreen(onBackClick: () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text("Tipo de tarea", style= MaterialTheme.typography.titleMedium)
-            CustomSpinner({ c -> nuevaCategoria = c } )
+            CustomSpinner(selectedCategory = nuevaCategoria) { c -> nuevaCategoria = c }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text("Fecha de entrega", style= MaterialTheme.typography.titleMedium)
-            CustomDatePicker({d -> nuevaFecha = d})
+            Text("Fecha de entrega", style = MaterialTheme.typography.titleMedium)
+
+            if (tareaId != -1) {
+                Text(
+                    text = "Fecha actual: $nuevaFecha",
+                    color = Color.Gray
+                )
+            }
+
+            CustomDatePicker { d -> nuevaFecha = d }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            CustomSwitch( {e -> nuevoEstatus = e})
-
+            CustomSwitch(checked = nuevoEstatus) { e -> nuevoEstatus = e }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -169,7 +192,26 @@ fun AddTaskScreen(onBackClick: () -> Unit) {
                 onClick = {
                     if (nuevoNombre.isNotBlank()) {
                         coroutineScope.launch(Dispatchers.IO) {
-                            dao.insertar(Tarea(Nombre = nuevoNombre, Categoria = nuevaCategoria, Fecha = nuevaFecha, Estatus = nuevoEstatus))
+                            if (tareaId == -1) {
+                                dao.insertar(
+                                    Tarea(
+                                        Nombre = nuevoNombre,
+                                        Categoria = nuevaCategoria,
+                                        Fecha = nuevaFecha,
+                                        Estatus = nuevoEstatus
+                                    )
+                                )
+                            }else{
+                                dao.actualizar(
+                                    Tarea(
+                                        id = tareaId,
+                                        Nombre = nuevoNombre,
+                                        Categoria = nuevaCategoria,
+                                        Fecha = nuevaFecha,
+                                        Estatus = nuevoEstatus
+                                    )
+                                )
+                            }
                         }
                         Toast.makeText(context, "Se ha agregado una tarea correctamente", Toast.LENGTH_SHORT).show()
                     } else {

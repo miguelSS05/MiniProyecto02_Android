@@ -43,6 +43,7 @@ fun CustomDatePicker(onSelectedDatePicker: (String) -> Unit ) {
                         val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                         formatter.timeZone = TimeZone.getTimeZone("UTC")
                         selectedDateText = formatter.format(Date(millis))
+                        onSelectedDatePicker(selectedDateText)
 
                     }
                     openDialog = false
