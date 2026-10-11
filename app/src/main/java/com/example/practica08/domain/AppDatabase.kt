@@ -1,13 +1,13 @@
 package com.example.practica08.domain
 import android.content.Context
 import androidx.room.*
-import com.example.practica08.data.Usuario
-import com.example.practica08.data.UsuarioDao
+import com.example.practica08.data.Tarea
+import com.example.practica08.data.TareaDao
 
-@Database(entities = [Usuario::class], version = 1)
+@Database(entities = [Tarea::class], version = 1)
 
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun usuarioDao(): UsuarioDao
+    abstract fun usuarioDao(): TareaDao
 
     companion object {
         @Volatile
@@ -18,7 +18,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "mi_base_datos"
+                    "MiniProyectoDos"
                 ).build()
                 INSTANCE = instance
                 instance

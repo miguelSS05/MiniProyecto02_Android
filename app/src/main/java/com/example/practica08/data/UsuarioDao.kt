@@ -4,14 +4,14 @@ import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface UsuarioDao {
-    @Query("SELECT * FROM usuarios")
+interface TareaDao {
+    @Query("SELECT * FROM tarea")
 
-    fun obtenerTodos(): Flow<List<Usuario>>
+    fun obtenerTodos(): Flow<List<Tarea>>
 
     @Insert
-    fun insertar(usuario: Usuario)
+    fun insertar(tarea: Tarea)
 
     @Delete
-    suspend fun eliminar(usuario: Usuario)
+    suspend fun eliminar(tarea: Tarea)
 }
