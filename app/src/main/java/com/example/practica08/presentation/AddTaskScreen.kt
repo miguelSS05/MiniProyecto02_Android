@@ -201,7 +201,7 @@ fun AddTaskScreen(onBackClick: () -> Unit, tareaId: Int = -1) {
                                         Estatus = nuevoEstatus
                                     )
                                 )
-                            }else{
+                            } else {
                                 dao.actualizar(
                                     Tarea(
                                         id = tareaId,
@@ -212,13 +212,14 @@ fun AddTaskScreen(onBackClick: () -> Unit, tareaId: Int = -1) {
                                     )
                                 )
                             }
+                            kotlinx.coroutines.withContext(Dispatchers.Main) {
+                                Toast.makeText(context, "Se ha agregado una tarea correctamente", Toast.LENGTH_SHORT).show()
+                                onBackClick()
+                            }
                         }
-                        Toast.makeText(context, "Se ha agregado una tarea correctamente", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(context, "Hubo un error al agregar la tarea", Toast.LENGTH_SHORT).show()
                     }
-
-                    onBackClick()
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

@@ -1,5 +1,6 @@
 package com.example.practica08.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
@@ -43,20 +44,26 @@ fun CustomSpinner(selectedCategory: categoria, onCategoryChange: (categoria) -> 
             readOnly = true,
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
-                IconButton(onClick = { expanded = true}) {
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-
+                IconButton(onClick = { expanded = true }) {
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Desplegar categorías")
                 }
             }
         )
 
-        DropdownMenu (
+        // Capa transparente para que al tocar cualquier parte del TextField abra el menú
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable { expanded = true }
+        )
+
+        DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false}
+            onDismissRequest = { expanded = false }
         ) {
             for (c in listCategories) {
                 DropdownMenuItem(
-                    text = { Text(convertCategory(c))},
+                    text = { Text(convertCategory(c)) },
                     onClick = {
                         onCategoryChange(c)
                         expanded = false
