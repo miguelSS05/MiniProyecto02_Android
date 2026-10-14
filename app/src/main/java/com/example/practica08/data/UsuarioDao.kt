@@ -21,4 +21,15 @@ interface TareaDao {
     @Update
     suspend fun actualizar(tarea: Tarea)
 
+    @Query("DELETE FROM tarea")
+    suspend fun eliminarTodas()
+
+    @Query("DELETE FROM tarea WHERE estatus = 1")
+    suspend fun eliminarCompletadas()
+
+    @Query("UPDATE tarea SET estatus = 1")
+    suspend fun marcarTodasComoCompletadas()
+
+    @Query("UPDATE tarea SET estatus = 0")
+    suspend fun marcarTodasComoPendientes()
 }

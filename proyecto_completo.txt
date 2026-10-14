@@ -1,0 +1,1646 @@
+﻿=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\androidTest\java\com\example\practica08\AddTeskScreenTest.kt ===
+package com.example.practica08
+
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createComposeRule
+import com.example.practica08.presentation.AddTaskScreen
+import org.junit.Rule
+import org.junit.Test
+
+class AddTaskScreenTest {
+
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    // 1. VerificaciÃ³n paso a paso de TODOS los controles del formulario de forma visible y pausada
+    @Test
+    fun flujoPasoAPasoCompletoFormularioAddTask() {
+        var regresoClickeado = false
+
+        composeTestRule.setContent {
+            AddTaskScreen(onBackClick = { regresoClickeado = true })
+        }
+
+        // PASO 1: Observar pantalla inicial
+        Thread.sleep(2000)
+
+        //  PASO 2: Escribir nombre de la tarea
+        composeTestRule.onNodeWithText("Nombre de la tarea").assertIsDisplayed()
+        composeTestRule.onNodeWithText("")
+            .performTextInput("Proyecto Final Android")
+        Thread.sleep(2000)
+
+        //  PASO 3: Probar el menÃº de opciones superior (TopAppBar)
+        composeTestRule.onNodeWithContentDescription("MÃ¡s opciones").performClick()
+        Thread.sleep(1500)
+        composeTestRule.onNodeWithText("ConfiguraciÃ³n").assertIsDisplayed()
+        composeTestRule.onNodeWithText("ConfiguraciÃ³n").performClick()
+        Thread.sleep(1500)
+
+        // PASO 4: Seleccionar categorÃ­a en CustomSpinner (ej. "Trabajo")
+        composeTestRule.onNodeWithText("Otro").performClick()
+        Thread.sleep(1500)
+        composeTestRule.onNodeWithText("Trabajo").performClick()
+        Thread.sleep(2000)
+
+        // PASO 5: Interactuar con el DatePicker
+        composeTestRule.onNodeWithText("Seleccionar Fecha").performClick()
+        Thread.sleep(2000)
+        composeTestRule.onNodeWithText("Aceptar").performClick()
+        Thread.sleep(2000)
+
+        // PASO 6: Cambiar el Switch de "Tarea terminada"
+        composeTestRule.onNodeWithText("Tarea terminada").assertIsDisplayed()
+        composeTestRule.onNode(isToggleable()).performClick()
+        Thread.sleep(2000)
+
+        //  PASO 7: Presionar "Guardar tarea"
+        composeTestRule.onNodeWithText("Guardar tarea").performClick()
+        Thread.sleep(2000)
+
+        // Confirmar que finalizÃ³ correctamente activando la callback de retorno
+        assert(regresoClickeado)
+    }
+
+    // 2. Probar validaciÃ³n cuando el nombre estÃ¡ vacÃ­o
+    @Test
+    fun validarQueFormularioVacioNoGuarde() {
+        var regresoClickeado = false
+
+        composeTestRule.setContent {
+            AddTaskScreen(onBackClick = { regresoClickeado = true })
+        }
+
+        Thread.sleep(1500)
+
+        // Intentar guardar con campo vacÃ­o
+        composeTestRule.onNodeWithText("Guardar tarea").performClick()
+        Thread.sleep(2000)
+
+        // Verificar que NO se permitiÃ³ cerrar/guardar
+        assert(!regresoClickeado)
+    }
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\androidTest\java\com\example\practica08\ExampleInstrumentedTest.kt ===
+package com.example.practica08
+
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.ext.junit.runners.AndroidJUnit4
+
+import org.junit.Test
+import org.junit.runner.RunWith
+
+import org.junit.Assert.*
+
+/**
+ * Instrumented test, which will execute on an Android device.
+ *
+ * See [testing documentation](http://d.android.com/tools/testing).
+ */
+@RunWith(AndroidJUnit4::class)
+class ExampleInstrumentedTest {
+    @Test
+    fun useAppContext() {
+        // Context of the app under test.
+        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+        assertEquals("com.example.practica08", appContext.packageName)
+    }
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\androidTest\java\com\example\practica08\IntegrationTest.kt ===
+package com.example.practica08
+
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.test.core.app.ActivityScenario
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class IntegrationTest {
+
+    @get:Rule
+    val composeTestRule = createAndroidComposeRule<MainActivity>()
+
+    @Test
+    fun flujoCompletoCrearTareaYVerificarEnListaConReinicioDeApp() {
+        // 1. En MainScreen, presionar el botÃ³n "Crear nueva tarea"
+        composeTestRule.onNodeWithText("Crear nueva tarea").performClick()
+
+        // 2. En AddTaskScreen, escribir el nombre de la tarea
+        composeTestRule.onNodeWithText("")
+            .performTextInput("Prueba con Reinicio de App")
+
+        // 3. Presionar "Guardar tarea"
+        composeTestRule.onNodeWithText("Guardar tarea").performClick()
+
+        // 4. Verificar que aparece inmediatamente
+        composeTestRule.onNodeWithText("Prueba con Reinicio de App").assertIsDisplayed()
+
+        Thread.sleep(1000)
+
+        // 5. CERRAR la app por completo
+        composeTestRule.activityRule.scenario.close()
+
+        Thread.sleep(1000)
+
+        // 6. VOLVER A ABRIR MainActivity desde cero en una nueva instancia
+        ActivityScenario.launch(MainActivity::class.java).use {
+            Thread.sleep(2000)
+
+            // 7. VERIFICAR PERSISTENCIA: La tarea debe seguir apareciendo al abrir la app de nuevo
+            composeTestRule.onNodeWithText("Prueba con Reinicio de App").assertIsDisplayed()
+        }
+    }
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\androidTest\java\com\example\practica08\TareaDaoTest.kt ===
+package com.example.practica08
+
+import android.content.Context
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.practica08.data.Tarea
+import com.example.practica08.data.TareaDao
+import com.example.practica08.data.categoria
+import com.example.practica08.domain.AppDatabase
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class TareaDaoTest {
+
+    private lateinit var database: AppDatabase
+    private lateinit var dao: TareaDao
+
+    @Before
+    fun setup() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        // Base de datos temporal en memoria
+        database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+            .allowMainThreadQueries() // Permitir ejecuciones directas para el test
+            .build()
+        dao = database.usuarioDao()
+    }
+
+    @After
+    fun teardown() {
+        database.close()
+    }
+
+    @Test
+    fun insertarYObtenerTarea() = runBlocking {
+        val nuevaTarea = Tarea(
+            Nombre = "Estudiar para el examen",
+            Categoria = categoria.Escolar,
+            Fecha = "15/10/2026",
+            Estatus = false
+        )
+
+        dao.insertar(nuevaTarea)
+
+        val listaTareas = dao.obtenerTodos().first()
+        assertEquals(1, listaTareas.size)
+        assertEquals("Estudiar para el examen", listaTareas[0].Nombre)
+    }
+
+    @Test
+    fun actualizarEstatusTarea() = runBlocking {
+        val tarea = Tarea(id = 1, Nombre = "Lavar ropa", Estatus = false)
+        dao.insertar(tarea)
+
+        val tareaGuardada = dao.obtenerTodos().first()[0]
+        dao.actualizar(tareaGuardada.copy(Estatus = true))
+
+        val tareaActualizada = dao.obtenerTodos().first()[0]
+        assertTrue(tareaActualizada.Estatus)
+    }
+
+    @Test
+    fun eliminarTarea() = runBlocking {
+        val tarea = Tarea(id = 1, Nombre = "Comprar despensa")
+        dao.insertar(tarea)
+
+        val tareaGuardada = dao.obtenerTodos().first()[0]
+        dao.eliminar(tareaGuardada)
+
+        val lista = dao.obtenerTodos().first()
+        assertTrue(lista.isEmpty())
+    }
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\java\com\example\practica08\components\customDatePicker.kt ===
+package com.example.practica08.components
+
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+
+@Composable
+fun CustomDatePicker(onSelectedDatePicker: (String) -> Unit ) {
+    var openDialog by remember  { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
+    var selectedDateText by remember { mutableStateOf("Seleccionar Fecha") }
+
+    Button(
+        onClick = { openDialog = true },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(selectedDateText)
+    }
+
+    if (openDialog) {
+        DatePickerDialog(
+            onDismissRequest = { openDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                        formatter.timeZone = TimeZone.getTimeZone("UTC")
+                        selectedDateText = formatter.format(Date(millis))
+                        onSelectedDatePicker(selectedDateText)
+
+                    }
+                    openDialog = false
+                }) {
+                    Text("Aceptar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { openDialog = false}) {
+                    Text("Cancelar")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\java\com\example\practica08\components\customSpinner.kt ===
+package com.example.practica08.components
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import com.example.practica08.data.categoria
+import androidx.compose.foundation.lazy.items
+
+fun convertCategory(c: categoria): String {
+    return when (c) {
+        categoria.Hogar -> "Hogar"
+        categoria.Trabajo -> "Trabajo"
+        categoria.Escolar -> "Escolar"
+        categoria.Social -> "Social"
+        categoria.Otro -> "Otro"
+        else -> "Error"
+    }
+}
+
+val listCategories: List<categoria> = listOf(categoria.Otro, categoria.Hogar, categoria.Escolar, categoria.Social, categoria.Trabajo)
+
+@Composable
+fun CustomSpinner(selectedCategory: categoria, onCategoryChange: (categoria) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = convertCategory(selectedCategory),
+            onValueChange = {},
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = {
+                IconButton(onClick = { expanded = true }) {
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Desplegar categorÃ­as")
+                }
+            }
+        )
+
+        // Capa transparente para que al tocar cualquier parte del TextField abra el menÃº
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable { expanded = true }
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            for (c in listCategories) {
+                DropdownMenuItem(
+                    text = { Text(convertCategory(c)) },
+                    onClick = {
+                        onCategoryChange(c)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\java\com\example\practica08\components\customSwitch.kt ===
+package com.example.practica08.components
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
+
+@Composable
+fun CustomSwitch(checked: Boolean, onCompleteChanged: (Boolean) -> Unit) {
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text("Tarea terminada", style = MaterialTheme.typography.titleMedium)
+        Switch(
+            checked = checked,
+            onCheckedChange = {
+                onCompleteChanged(it)
+            }
+        )
+    }
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\java\com\example\practica08\data\Tarea.kt ===
+package com.example.practica08.data
+
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "tarea")
+data class Tarea (
+    @PrimaryKey(autoGenerate = true)
+    var id: Int = 0,
+
+    @ColumnInfo(name = "nombre")
+    var Nombre: String= "",
+
+    @ColumnInfo(name = "categoria")
+    var Categoria : categoria = categoria.Otro,
+
+    @ColumnInfo(name = "fecha")
+    var Fecha: String= "",
+
+    @ColumnInfo(name = "estatus")
+    var Estatus : Boolean= false
+)
+
+
+enum class categoria {
+    Hogar,
+    Trabajo,
+    Escolar,
+    Social,
+    Otro
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\java\com\example\practica08\data\UsuarioDao.kt ===
+package com.example.practica08.data
+
+import androidx.room.*
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface TareaDao {
+    @Query("SELECT * FROM tarea")
+
+    fun obtenerTodos(): Flow<List<Tarea>>
+
+    @Query("SELECT * FROM tarea WHERE id = :id")
+    suspend fun obtenerPorId(id: Int): Tarea?
+
+    @Insert
+    fun insertar(tarea: Tarea)
+
+    @Delete
+    suspend fun eliminar(tarea: Tarea)
+
+    @Update
+    suspend fun actualizar(tarea: Tarea)
+
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\java\com\example\practica08\domain\AppDatabase.kt ===
+package com.example.practica08.domain
+import android.content.Context
+import androidx.room.*
+import com.example.practica08.data.Tarea
+import com.example.practica08.data.TareaDao
+
+@Database(entities = [Tarea::class], version = 1)
+
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun usuarioDao(): TareaDao
+
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        fun getDatabase(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "MiniProyectoDos"
+                ).build()
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\java\com\example\practica08\presentation\AddTaskActivity.kt ===
+package com.example.practica08.presentation
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+
+class AddTaskActivity : ComponentActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val idTarea = intent.getIntExtra(
+            "ID_TAREA",
+            -1
+        )
+
+        setContent {
+            AddTaskScreen(
+                onBackClick = { finish() },
+                tareaId = idTarea
+            )
+        }
+    }
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\java\com\example\practica08\presentation\AddTaskScreen.kt ===
+package com.example.practica08.presentation
+
+import android.content.Intent
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import com.example.practica08.components.CustomDatePicker
+import com.example.practica08.components.CustomSpinner
+import com.example.practica08.components.CustomSwitch
+import com.example.practica08.data.Tarea
+import com.example.practica08.domain.AppDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import com.example.practica08.data.categoria
+import kotlin.jvm.java
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.Color
+
+fun convertCategory(c: categoria): String {
+    return when (c) {
+        categoria.Hogar -> "Hogar"
+        categoria.Trabajo -> "Trabajo"
+        categoria.Escolar -> "Escolar"
+        categoria.Social -> "Social"
+        categoria.Otro -> "Otro"
+        else -> {
+            "Error"
+        }
+    }
+}
+
+val listCategories: List<categoria> = listOf(categoria.Otro, categoria.Hogar, categoria.Escolar, categoria.Social, categoria.Trabajo)
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddTaskScreen(onBackClick: () -> Unit, tareaId: Int = -1) {
+    val context = LocalContext.current
+
+    val db = remember { AppDatabase.getDatabase(context) }
+    val dao = db.usuarioDao()
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val usuarios by dao.obtenerTodos().collectAsState(initial = emptyList())
+
+    var nuevoNombre by remember { mutableStateOf("") }
+    var nuevaFecha by remember { mutableStateOf("") }
+    var nuevaCategoria by remember { mutableStateOf(categoria.Otro) }
+    var nuevoEstatus by remember { mutableStateOf(false) }
+    LaunchedEffect(tareaId) {
+
+        if (tareaId != -1) {
+
+            val tarea = dao.obtenerPorId(tareaId)
+
+            tarea?.let {
+
+                nuevoNombre = it.Nombre
+                nuevaFecha = it.Fecha
+                nuevaCategoria = it.Categoria
+                nuevoEstatus = it.Estatus
+
+            }
+        }
+    }
+    var menuExpandido by remember { mutableStateOf(false)}
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {Text("MiniProyecto 02")},
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
+                navigationIcon = {
+                    IconButton(onClick = {
+                        Toast.makeText(context, "Clic en Navegacion", Toast.LENGTH_SHORT).show()
+                    }) {
+                        Icon(imageVector = Icons.Default.Menu, contentDescription = "MenÃº")
+                    }
+                },
+                actions = {
+
+                    IconButton(onClick = { menuExpandido = true}) {
+                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = "MÃ¡s opciones")
+                    }
+
+                    DropdownMenu(
+                        expanded = menuExpandido,
+                        onDismissRequest = { menuExpandido = false}
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("ConfiguraciÃ³n") },
+                            onClick = {
+                                menuExpandido = false
+                                Toast.makeText(context, "Configuracion seleccionada", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Acerca de") },
+                            onClick = {
+                                menuExpandido = false
+                                Toast.makeText(context, "Acerca de seleccionada", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    }
+                }
+
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(top = 32.dp)
+                .padding(horizontal = 12.dp)
+        ) {
+            Text("Nombre de la tarea", style= MaterialTheme.typography.titleMedium)
+            // Nombre tarea
+            OutlinedTextField(
+                value = nuevoNombre,
+                onValueChange = { nuevoNombre = it },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text("Tipo de tarea", style= MaterialTheme.typography.titleMedium)
+            CustomSpinner(selectedCategory = nuevaCategoria) { c -> nuevaCategoria = c }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text("Fecha de entrega", style = MaterialTheme.typography.titleMedium)
+
+            if (tareaId != -1) {
+                Text(
+                    text = "Fecha actual: $nuevaFecha",
+                    color = Color.Gray
+                )
+            }
+
+            CustomDatePicker { d -> nuevaFecha = d }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            CustomSwitch(checked = nuevoEstatus) { e -> nuevoEstatus = e }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = {
+                    if (nuevoNombre.isNotBlank()) {
+                        coroutineScope.launch(Dispatchers.IO) {
+                            if (tareaId == -1) {
+                                dao.insertar(
+                                    Tarea(
+                                        Nombre = nuevoNombre,
+                                        Categoria = nuevaCategoria,
+                                        Fecha = nuevaFecha,
+                                        Estatus = nuevoEstatus
+                                    )
+                                )
+                            } else {
+                                dao.actualizar(
+                                    Tarea(
+                                        id = tareaId,
+                                        Nombre = nuevoNombre,
+                                        Categoria = nuevaCategoria,
+                                        Fecha = nuevaFecha,
+                                        Estatus = nuevoEstatus
+                                    )
+                                )
+                            }
+                            kotlinx.coroutines.withContext(Dispatchers.Main) {
+                                Toast.makeText(context, "Se ha agregado una tarea correctamente", Toast.LENGTH_SHORT).show()
+                                onBackClick()
+                            }
+                        }
+                    } else {
+                        Toast.makeText(context, "Hubo un error al agregar la tarea", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Guardar tarea")
+            }
+
+            Button(
+                onClick = onBackClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Volver")
+            }
+        }
+    }
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\java\com\example\practica08\presentation\MainScreen.kt ===
+package com.example.practica08.presentation
+
+import android.content.Intent
+import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import com.example.practica08.domain.AppDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+import androidx.compose.material.icons.*
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendModeColorFilter
+import androidx.compose.ui.graphics.Color
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreen() {
+    val context = LocalContext.current
+
+    val db = remember { AppDatabase.getDatabase(context) }
+    val dao = db.usuarioDao()
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val tareas by dao.obtenerTodos().collectAsState(initial = emptyList())
+
+
+    var menuExpandido by remember { mutableStateOf(false)}
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {Text("MiniProyecto 02")},
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
+                navigationIcon = {
+                    IconButton(onClick = {
+                        menuExpandido = true
+                        Toast.makeText(context, "Clic en Navegacion", Toast.LENGTH_SHORT).show()
+                    }) {
+                        Icon(imageVector = Icons.Default.Menu, contentDescription = "MenÃº")
+                    }
+
+                    DropdownMenu(
+                        expanded = menuExpandido,
+                        onDismissRequest = { menuExpandido = false}
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Eliminar todas las tareas") },
+                            onClick = {
+                                menuExpandido = false
+                                Toast.makeText(context, "eliminar todas las tareas seleccionado", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Eliminar tareas completadas") },
+                            onClick = {
+                                menuExpandido = false
+                                Toast.makeText(context, "eliminar tareas completadas seleccionado", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Marcar todas como completadas") },
+                            onClick = {
+                                menuExpandido = false
+                                Toast.makeText(context, "marcar tareas como completadas", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Marcar todas como no completadas") },
+                            onClick = {
+                                menuExpandido = false
+                                Toast.makeText(context, "marcar tareas como no completadas", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    }
+                },
+                actions = {
+
+                    //IconButton(onClick = {}) {
+                    //    Icon(imageVector = Icons.Default.MoreVert, contentDescription = "MÃ¡s opciones")
+                    //}
+
+                }
+
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(top = 32.dp)
+                .padding(horizontal = 12.dp)
+        ) {
+
+            Button(
+                onClick = {
+                    val intent = Intent(context, AddTaskActivity::class.java).apply {}
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Crear nueva tarea")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Consultar/filtrar tareas")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text("Lista de Tareas Registradas:",
+                style = MaterialTheme.typography.titleMedium)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(tareas) { tarea ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = Modifier.fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text ="${tarea.Nombre}",
+                                modifier = Modifier.padding(16.dp)
+                            )
+
+                            Row() {
+                                val ColorEstatus = if (tarea.Estatus) Color(0xFF7DD363) else Color(
+                                    0xFFCCA48E
+                                )
+                                val TextoEstatus = if (tarea.Estatus) "Tarea marcada como pendiente" else "Tarea marcada como culminada"
+                                val IconEstatus = if (tarea.Estatus) Icons.Default.Check else Icons.Default.AccessTime
+
+                                IconButton(
+                                    onClick = {
+                                        coroutineScope.launch(Dispatchers.IO) {dao.actualizar(tarea.copy(Estatus = !tarea.Estatus)) }
+                                        Toast.makeText(context, TextoEstatus, Toast.LENGTH_SHORT).show()
+                                    },
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .height(42.dp)
+                                        .background(ColorEstatus)
+                                ) {
+                                    Icon(imageVector = IconEstatus, contentDescription = "")
+                                }
+
+                                Spacer(modifier = Modifier.width(4.dp))
+
+                                IconButton(onClick = {
+                                    val intent = Intent(context, AddTaskActivity::class.java).apply {
+                                        putExtra(
+                                            "ID_TAREA",
+                                            tarea.id
+                                        )
+                                    }
+                                    context.startActivity(intent)
+
+                                    Toast.makeText(context, "Editar tarea", Toast.LENGTH_SHORT).show()
+                                },
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .height(42.dp)
+                                        .background(Color(0xFFEFB584))) {
+                                    Icon(imageVector = Icons.Default.Edit, contentDescription = "MenÃº")
+                                }
+
+                                Spacer(modifier = Modifier.width(4.dp))
+
+                                IconButton(onClick = {
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        dao.eliminar(tarea)
+                                    }
+                                    Toast.makeText(context, "Tarea Eliminada", Toast.LENGTH_SHORT).show()
+                                },
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .height(42.dp)
+                                        .background(Color(0xFFEC7979))) {
+                                    Icon(imageVector = Icons.Default.Delete, contentDescription = "MenÃº")
+                                }
+
+                                Spacer(modifier = Modifier.width(2.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\java\com\example\practica08\ui\theme\Color.kt ===
+package com.example.practica08.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+val Purple80 = Color(0xFFD0BCFF)
+val PurpleGrey80 = Color(0xFFCCC2DC)
+val Pink80 = Color(0xFFEFB8C8)
+
+val Purple40 = Color(0xFF6650a4)
+val PurpleGrey40 = Color(0xFF625b71)
+val Pink40 = Color(0xFF7D5260)
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\java\com\example\practica08\ui\theme\Theme.kt ===
+package com.example.practica08.ui.theme
+
+import android.app.Activity
+import android.os.Build
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+
+private val DarkColorScheme = darkColorScheme(
+    primary = Purple80,
+    secondary = PurpleGrey80,
+    tertiary = Pink80
+)
+
+private val LightColorScheme = lightColorScheme(
+    primary = Purple40,
+    secondary = PurpleGrey40,
+    tertiary = Pink40
+
+    /* Other default colors to override
+    background = Color(0xFFFFFBFE),
+    surface = Color(0xFFFFFBFE),
+    onPrimary = Color.White,
+    onSecondary = Color.White,
+    onTertiary = Color.White,
+    onBackground = Color(0xFF1C1B1F),
+    onSurface = Color(0xFF1C1B1F),
+    */
+)
+
+@Composable
+fun Practica08Theme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    // Dynamic color is available on Android 12+
+    dynamicColor: Boolean = true,
+    content: @Composable () -> Unit
+) {
+    val colorScheme = when {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            val context = LocalContext.current
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        }
+
+        darkTheme -> DarkColorScheme
+        else -> LightColorScheme
+    }
+
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography,
+        content = content
+    )
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\java\com\example\practica08\ui\theme\Type.kt ===
+package com.example.practica08.ui.theme
+
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+
+// Set of Material typography styles to start with
+val Typography = Typography(
+    bodyLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    )
+    /* Other default text styles to override
+    titleLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    ),
+    labelSmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 11.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp
+    )
+    */
+)
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\java\com\example\practica08\MainActivity.kt ===
+package com.example.practica08
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.practica08.presentation.MainScreen
+import com.example.practica08.ui.theme.Practica08Theme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            MainScreen()
+        }
+    }
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\res\drawable\ic_launcher_background.xml ===
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#3DDC84"
+        android:pathData="M0,0h108v108h-108z" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M9,0L9,108"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,0L19,108"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M29,0L29,108"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M39,0L39,108"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M49,0L49,108"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M59,0L59,108"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M69,0L69,108"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M79,0L79,108"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M89,0L89,108"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M99,0L99,108"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,9L108,9"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,19L108,19"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,29L108,29"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,39L108,39"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,49L108,49"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,59L108,59"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,69L108,69"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,79L108,79"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,89L108,89"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M0,99L108,99"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,29L89,29"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,39L89,39"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,49L89,49"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,59L89,59"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,69L89,69"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,79L89,79"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M29,19L29,89"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M39,19L39,89"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M49,19L49,89"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M59,19L59,89"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M69,19L69,89"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M79,19L79,89"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+</vector>
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\res\drawable\ic_launcher_foreground.xml ===
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M31,63.928c0,0 6.4,-11 12.1,-13.1c7.2,-2.6 26,-1.4 26,-1.4l38.1,38.1L107,108.928l-32,-1L31,63.928z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="85.84757"
+                android:endY="92.4963"
+                android:startX="42.9492"
+                android:startY="49.59793"
+                android:type="linear">
+                <item
+                    android:color="#44000000"
+                    android:offset="0.0" />
+                <item
+                    android:color="#00000000"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="nonZero"
+        android:pathData="M65.3,45.828l3.8,-6.6c0.2,-0.4 0.1,-0.9 -0.3,-1.1c-0.4,-0.2 -0.9,-0.1 -1.1,0.3l-3.9,6.7c-6.3,-2.8 -13.4,-2.8 -19.7,0l-3.9,-6.7c-0.2,-0.4 -0.7,-0.5 -1.1,-0.3C38.8,38.328 38.7,38.828 38.9,39.228l3.8,6.6C36.2,49.428 31.7,56.028 31,63.928h46C76.3,56.028 71.8,49.428 65.3,45.828zM43.4,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2c-0.3,-0.7 -0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C45.3,56.528 44.5,57.328 43.4,57.328L43.4,57.328zM64.6,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2s-0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C66.5,56.528 65.6,57.328 64.6,57.328L64.6,57.328z"
+        android:strokeWidth="1"
+        android:strokeColor="#00000000" />
+</vector>
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\res\mipmap-anydpi-v26\ic_launcher.xml ===
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_background" />
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+</adaptive-icon>
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\res\mipmap-anydpi-v26\ic_launcher_round.xml ===
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_background" />
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+</adaptive-icon>
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\res\values\colors.xml ===
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\res\values\strings.xml ===
+<resources>
+    <string name="app_name">MiniProyecto02</string>
+</resources>
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\res\values\themes.xml ===
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.MiniProyecto02" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\res\xml\backup_rules.xml ===
+<?xml version="1.0" encoding="utf-8"?><!--
+   Sample backup rules file; uncomment and customize as necessary.
+   See https://developer.android.com/guide/topics/data/autobackup
+   for details.
+   Note: This file is ignored for devices older than API 31
+   See https://developer.android.com/about/versions/12/backup-restore
+-->
+<full-backup-content>
+    <!--
+   <include domain="sharedpref" path="."/>
+   <exclude domain="sharedpref" path="device.xml"/>
+-->
+</full-backup-content>
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\res\xml\data_extraction_rules.xml ===
+<?xml version="1.0" encoding="utf-8"?><!--
+   Sample data extraction rules file; uncomment and customize as necessary.
+   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
+   for details.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- TODO: Use <include> and <exclude> to control what is backed up.
+        <include .../>
+        <exclude .../>
+        -->
+    </cloud-backup>
+    <!--
+    <device-transfer>
+        <include .../>
+        <exclude .../>
+    </device-transfer>
+    -->
+</data-extraction-rules>
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\main\AndroidManifest.xml ===
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MiniProyecto02">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MiniProyecto02"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+        android:name=".presentation.AddTaskActivity"
+        android:exported="false"
+        />
+    </application>
+
+</manifest>
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\src\test\java\com\example\practica08\ExampleUnitTest.kt ===
+package com.example.practica08
+
+import org.junit.Test
+
+import org.junit.Assert.*
+
+/**
+ * Example local unit test, which will execute on the development machine (host).
+ *
+ * See [testing documentation](http://d.android.com/tools/testing).
+ */
+class ExampleUnitTest {
+    @Test
+    fun addition_isCorrect() {
+        assertEquals(4, 2 + 2)
+    }
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\app\build.gradle.kts ===
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp") version "2.3.6"
+}
+
+android {
+    namespace = "com.example.practica08"
+    compileSdk {
+        version = release(37)
+    }
+
+    defaultConfig {
+        applicationId = "com.example.practica08"
+        minSdk = 24
+        targetSdk = 37
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            optimization {
+                enable = false
+            }
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    testImplementation(libs.junit)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+    androidTestImplementation("androidx.room:room-testing:2.6.1")
+    androidTestImplementation(libs.androidx.junit)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    val room_version = "2.8.5"
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:${room_version}")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
+    ksp("androidx.room:room-compiler:$room_version")
+
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\gradle\wrapper\gradle-wrapper.properties ===
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-9.8.0-all.zip
+networkTimeout=10000
+retries=0
+retryBackOffMs=500
+validateDistributionUrl=true
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\gradle\gradle-daemon-jvm.properties ===
+#This file is generated by updateDaemonJvm
+toolchainUrl.FREE_BSD.AARCH64=https\://api.foojay.io/disco/v3.0/ids/cf726b4a1c84b50457225f9bba6d7650/redirect
+toolchainUrl.FREE_BSD.X86_64=https\://api.foojay.io/disco/v3.0/ids/fa1e318c287360478e3c83a9a3ef1007/redirect
+toolchainUrl.LINUX.AARCH64=https\://api.foojay.io/disco/v3.0/ids/cf726b4a1c84b50457225f9bba6d7650/redirect
+toolchainUrl.LINUX.X86_64=https\://api.foojay.io/disco/v3.0/ids/fa1e318c287360478e3c83a9a3ef1007/redirect
+toolchainUrl.MAC_OS.AARCH64=https\://api.foojay.io/disco/v3.0/ids/c2dd35c9d0aaf0ba6ad0791320f99dfc/redirect
+toolchainUrl.MAC_OS.X86_64=https\://api.foojay.io/disco/v3.0/ids/e5810bd7fd1f8a586644409d395a7e55/redirect
+toolchainUrl.UNIX.AARCH64=https\://api.foojay.io/disco/v3.0/ids/cf726b4a1c84b50457225f9bba6d7650/redirect
+toolchainUrl.UNIX.X86_64=https\://api.foojay.io/disco/v3.0/ids/fa1e318c287360478e3c83a9a3ef1007/redirect
+toolchainUrl.WINDOWS.AARCH64=https\://api.foojay.io/disco/v3.0/ids/7b3c4877c0749019e6805bb61e421497/redirect
+toolchainUrl.WINDOWS.X86_64=https\://api.foojay.io/disco/v3.0/ids/d76df094a9cbbabd3b08251f9e61444a/redirect
+toolchainVersion=25
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\build.gradle.kts ===
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+    id("com.google.devtools.ksp") version "2.3.6" apply false
+}
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\gradle.properties ===
+# Project-wide Gradle settings.
+# IDE (e.g. Android Studio) users:
+# Gradle settings configured through the IDE *will override*
+# any settings specified in this file.
+# For more details on how to configure your build environment visit
+# http://www.gradle.org/docs/current/userguide/build_environment.html
+# Specifies the JVM arguments used for the daemon process.
+# The setting is particularly useful for tweaking memory settings.
+org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+# When configured, Gradle will run in incubating parallel mode.
+# This option should only be used with decoupled projects. For more details, visit
+# https://developer.android.com/r/tools/gradle-multi-project-decoupled-projects
+# org.gradle.parallel=true
+# When enabled, the Configuration Cache allows Gradle to skip the configuration
+# phase entirely if nothing that affects the build configuration (such as build scripts)
+# has changed. Additionally, Gradle applies performance optimizations to task execution.
+org.gradle.configuration-cache=true
+# Kotlin code style for this project: "official" or "obsolete":
+kotlin.code.style=official
+android.disallowKotlinSourceSets=false
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\local.properties ===
+## This file must *NOT* be checked into Version Control Systems,
+# as it contains information specific to your local configuration.
+#
+# Location of the SDK. This is only used by Gradle.
+# For customization when using a Version Control System, please read the
+# header note.
+#Tue Oct 13 16:19:45 MST 2026
+sdk.dir=C\:\\Users\\manue\\AppData\\Local\\Android\\Sdk
+
+=== FILE: C:\Users\manue\AndroidStudioProjects\MiniProyecto02_Android\settings.gradle.kts ===
+pluginManagement {
+    repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "practica08"
+include(":app")
+ 
+
